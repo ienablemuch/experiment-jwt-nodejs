@@ -36,7 +36,7 @@ app.post('/login', (req, res, next) =>
 {
     const { username, password } = req.body;
     
-    const accessToken = generateAccessToken(username, 'admin');    
+    const accessToken = generateAccessToken(username, getRole(username));    
     const refreshToken = randtoken.uid(42);
 
     refreshTokens[refreshToken] = username;
@@ -56,12 +56,24 @@ function generateAccessToken(username, role, expiresInSeconds = 60)
     return accessToken;
 }
 
+
+function getRole(username)
+{
+    switch (username) {
+        case 'linus':
+            return 'admin';
+        default:
+            return 'user';        
+    }
+}
+
+
 app.post('/token', (req, res) => 
 {
     const { username, refreshToken } = req.body;
     
     if (refreshToken in refreshTokens && refreshTokens[refreshToken] === username) {        
-        const accessToken = generateAccessToken(username, 'admin');
+        const accessToken = generateAccessToken(username, getRole(username));
         res.json({accessToken});
     }
     else {
@@ -86,5 +98,6 @@ app.post('/restaurant-reservation', passport.authenticate('jwt', {session: false
 
     res.json({user, guestsCount});
 });
+
 
 app.listen(8080);
