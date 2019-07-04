@@ -99,5 +99,35 @@ app.post('/restaurant-reservation', passport.authenticate('jwt', {session: false
     res.json({user, guestsCount});
 });
 
+app.get('/user-accessible', authorize(), (req, res) => 
+{
+    res.json({message: 'for all users', user: req.user});
+});
+
+app.get('/admin-accessible', authorize('admin'), (req,res) => 
+{
+    res.json({message: 'for admins only', user: req.user});
+});
+
+
+function authorize(roles = []) 
+{
+    if (typeof roles === 'string') {
+        roles = [roles];
+    }
+
+    return [
+        passport.authenticate('jwt', {session: false}),
+
+        (req, res, next) => 
+        {
+            if (roles.length > 0 && !roles.includes(req.user.role)) {
+                return res.status(403).json({message: 'No access'});
+            };
+
+            return next();
+        }
+    ];
+}
 
 app.listen(8080);
