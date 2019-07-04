@@ -11,6 +11,23 @@ const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
 const refreshTokens = {};
 const SECRET = "sauce";
 
+const options = {   
+    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+    secretOrKey: SECRET
+};
+
+passport.use(new JwtStrategy(options, (jwtPayload, done) => 
+{
+    const expirationDate = new Date(jwtPayload.exp * 1000);
+    if (new Date() >= expirationDate) {
+        return done(null, false);
+    }
+
+    const user = jwtPayload;
+    done(null, user);
+}));
+
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(passport.initialize());
@@ -27,7 +44,6 @@ app.post('/login', (req, res, next) =>
     res.json({accessToken, refreshToken});
 });
 
-
 function generateAccessToken(username, role, expiresInSeconds = 60)
 {
     const user = {
@@ -39,15 +55,6 @@ function generateAccessToken(username, role, expiresInSeconds = 60)
     
     return accessToken;
 }
-
-app.post('/restaurant-reservation', passport.authenticate('jwt', {session: false}), (req, res) => 
-{
-    const { user } = req;
-    const { guestsCount } = req.body;
-
-    res.json({user, guestsCount});
-});
-
 
 app.post('/token', (req, res) => 
 {
@@ -72,20 +79,12 @@ app.delete('/token/:refreshToken', (req, res, next) =>
     res.send(204);
 });
 
-const options = {   
-    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-    secretOrKey: SECRET
-};
-
-passport.use(new JwtStrategy(options, (jwtPayload, done) => 
+app.post('/restaurant-reservation', passport.authenticate('jwt', {session: false}), (req, res) => 
 {
-    const expirationDate = new Date(jwtPayload.exp * 1000);
-    if (new Date() >= expirationDate) {
-        return done(null, false);
-    }
+    const { user } = req;
+    const { guestsCount } = req.body;
 
-    const user = jwtPayload;
-    done(null, user);
-}));
+    res.json({user, guestsCount});
+});
 
 app.listen(8080);
