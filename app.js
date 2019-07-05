@@ -1,5 +1,4 @@
 const express = require('express');
-const app = express();
 
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
@@ -27,6 +26,7 @@ passport.use(new JwtStrategy(options, (jwtPayload, done) =>
     done(null, user);
 }));
 
+const app = express();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
