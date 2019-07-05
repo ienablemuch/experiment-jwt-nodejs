@@ -1,1 +1,1 @@
-# experiment-jwt-nodejs
+# experiment-nodejs-jwt
